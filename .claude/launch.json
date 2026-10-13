@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "beyond-the-glass", "runtimeExecutable": "npx", "runtimeArgs": ["vite", "--port", "5199", "--strictPort"], "port": 5199 }
+  ]
+}
