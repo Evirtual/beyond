@@ -1,4 +1,8 @@
+<p align="center"><img src="public/pwa-512.png" width="112" alt="Beyond the Glass black hole"></p>
+
 # Beyond the Glass
+
+[![Pages](https://github.com/Evirtual/beyond/actions/workflows/pages.yml/badge.svg)](https://github.com/Evirtual/beyond/actions/workflows/pages.yml)
 
 A window you look through, not a page you look at. Live at
 [beyond.edgarasneverdauskas.com](https://beyond.edgarasneverdauskas.com).
