@@ -20,17 +20,18 @@ export default defineConfig({
       theme_color: '#000000',
       icons: [
         ...[16, 32, 48, 64, 128].map(size => ({
-          src: `/app-${size}.png`, sizes: `${size}x${size}`, type: 'image/png', purpose: 'any' as const,
+          src: `/app-${size}.png?v=7`, sizes: `${size}x${size}`, type: 'image/png', purpose: 'any' as const,
         })),
-        { src: '/pwa-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-        { src: '/pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-        { src: '/pwa-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        { src: '/pwa-192.png?v=7', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: '/pwa-512.png?v=7', sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: '/pwa-maskable-512.png?v=7', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
       ],
     },
     workbox: {
       globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
       navigateFallback: 'index.html',
       cleanupOutdatedCaches: true,
+      ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^v$/],
       runtimeCaching: [{
         urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\//,
         handler: 'StaleWhileRevalidate',
