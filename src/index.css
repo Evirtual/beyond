@@ -294,7 +294,12 @@ html[data-open-drift] .scroll-hint {
 }
 
 @media (max-width: 600px), (pointer: coarse) and (max-height: 600px) {
-  .controls { animation: inscription-controls 11s ease-in-out 8s both; }
+  .controls {
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    animation: inscription-controls 11s ease-in-out 8s both;
+  }
+  /* Remove the reserved trailing label space on narrow screens. */
+  .drift .pill-label { width: auto; padding-right: 4px; }
   .inscription {
     right: calc(28px + env(safe-area-inset-right, 0px));
   }
