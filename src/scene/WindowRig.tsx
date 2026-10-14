@@ -76,6 +76,11 @@ export function WindowRig() {
     const push = (d: number, lim = DEPTH_STEP * 1.2) => {
       // never let the target run more than one world ahead of where you are
       const cur = stage2.current.depth
+      if (d !== 0 && Math.sign(d) !== lastDir.current) {
+        // Reversing should brake existing travel, not inherit its queued momentum.
+        target.current.depth = cur
+        stage1.current.depth = cur
+      }
       target.current.depth = THREE.MathUtils.clamp(target.current.depth + d, cur - lim, cur + lim)
       lastInput.current = now()
       if (d !== 0) lastDir.current = Math.sign(d)
@@ -194,7 +199,9 @@ export function WindowRig() {
       // exponential: each shade deeper pulls about e times harder than the last
       const pull = BASE_PULL * Math.exp(3 * closeness) * opening + 4.5 * near * near
       // while drifting, your chosen pace sets the hole's pull too — slow stays slow to the end
-      tg.depth += dir * pull * (view.auto ? view.driftRate : 1) * dt
+      // The entrance must not turn a small backward swipe into an automatic fall.
+      // Reverse travel is driven only by input and settles when the gesture ends.
+      if (dir > 0) tg.depth += pull * (view.auto ? view.driftRate : 1) * dt
       // drifting: carried gently forward, through black hole after black hole, without end
       if (view.auto) {
         lastDir.current = 1
