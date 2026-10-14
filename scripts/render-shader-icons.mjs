@@ -14,6 +14,9 @@ const noise = between('float hash(vec2 p)', '// rotate a colour')
 let hole = between('float show = smoothstep', '\n          }\n          if (uHole > 0.001 && uEdge')
 // The icon's opening is black; no next-world texture is needed.
 hole = hole.replace(/if \(uPortal > 0\.5\) \{[\s\S]*?\n            \}/, '')
+// The far disk is occluded by the black opening; retain the near disk in front.
+hole = hole.replace('disk * (1.0 - nearSide) * 0.35 * show', 'disk * (1.0 - nearSide) * 0.35 * show * outside')
+hole = hole.replace('outer = rs * 5.0', 'outer = rs * 3.55')
 const shader = `precision highp float;
 varying vec2 vUv;
 const float uTime = 38.0;
@@ -36,7 +39,7 @@ const browser = await chromium.launch({
 try {
   const page = await browser.newPage()
   for (const compact of [false, true]) {
-  const iconShader = compact ? shader.replace('float rs = 0.135;', 'float rs = 0.18;').replace('gl_FragColor = vec4(max(col * 1.5, 0.0), 1.0);', 'vec3 c = clamp(col * 1.5, 0.0, 1.0); float a = hr < rs ? 1.0 : max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c / max(a, 0.001), a);') : shader
+  const iconShader = compact ? shader.replace('float rs = 0.135;', 'float rs = 0.16;').replace('outer = rs * 3.55', 'outer = rs * 3.0').replace('gl_FragColor = vec4(max(col * 1.5, 0.0), 1.0);', 'vec3 c = clamp(col * 1.5, 0.0, 1.0); float a = hr < rs ? 1.0 : max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c / max(a, 0.001), a);') : shader
   const outputs = await page.evaluate(({ shader, compact }) => {
     const canvas = document.createElement('canvas')
     canvas.width = canvas.height = 1536
