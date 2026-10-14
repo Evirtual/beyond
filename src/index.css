@@ -9,9 +9,10 @@ html, body, #root {
 /* Paint the entire viewport; apply safe areas only to overlaid text/controls. */
 html { height: 100dvh; }
 
-/* Scene gestures are handled by the rig, including temporary pinch zoom.
-   Keep browser viewport zoom/panning out of the canvas gesture sequence. */
-canvas { touch-action: none; transform-origin: center; }
+/* The scene handles single-finger travel. Multi-touch never pans/zooms the page. */
+html, body, #root { overscroll-behavior: none; }
+#root { position: fixed; inset: 0; overflow: clip; }
+canvas, .controls { touch-action: none; }
 
 .whisper {
   position: fixed;
