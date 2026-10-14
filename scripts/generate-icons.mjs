@@ -18,10 +18,11 @@ const stars = [
 ].map(([x, y, opacity]) => `<circle cx="${x}" cy="${y}" r=".7" fill="#a8aed3" opacity="${opacity * .2}"/><circle cx="${x}" cy="${y}" r=".18" fill="#c7cbea" opacity="${opacity}"/>`).join('')
 const background = `<defs><radialGradient id="space" cx="48%" cy="42%" r="70%"><stop stop-color="#030208"/><stop offset=".65" stop-color="#010103"/><stop offset="1" stop-color="#000000"/></radialGradient></defs><rect width="64" height="64" fill="url(#space)"/>${stars}`
 for (const [filename, size, inset] of [
-  ['pwa-192.png', 192, 4],
-  ['pwa-512.png', 512, 4],
-  ['pwa-maskable-512.png', 512, 7],
-  ['apple-touch-icon.png', 180, 4],
+  ['pwa-192.png', 192, 0],
+  ['pwa-512.png', 512, 0],
+  // Let the outer glow reach into the crop; the central hole stays in the safe area.
+  ['pwa-maskable-512.png', 512, 0],
+  ['apple-touch-icon.png', 180, 0],
 ]) {
   const scale = (64 - inset * 2) / 64
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64">${background}<g transform="translate(${inset} ${inset}) scale(${scale})">${artwork}</g></svg>`
