@@ -19,6 +19,9 @@ export default defineConfig({
       background_color: '#000000',
       theme_color: '#000000',
       icons: [
+        ...[16, 32, 48, 64, 128].map(size => ({
+          src: `/app-${size}.png`, sizes: `${size}x${size}`, type: 'image/png', purpose: 'any' as const,
+        })),
         { src: '/pwa-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
         { src: '/pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
         { src: '/pwa-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },

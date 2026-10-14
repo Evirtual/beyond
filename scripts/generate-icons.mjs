@@ -4,6 +4,12 @@ import { Resvg } from '@resvg/resvg-js'
 // Phone artwork follows the in-app black hole. The browser favicon is independent.
 const source = await readFile(new URL('./phone-logo.svg', import.meta.url), 'utf8')
 const artwork = source.replace(/<svg[^>]*>/, '').replace('</svg>', '')
+// Desktop title bars need the stronger, unpadded mark rather than a shrunken phone tile.
+const compact = await readFile(new URL('../public/favicon-black-hole.svg', import.meta.url), 'utf8')
+for (const size of [16, 32, 48, 64, 128]) {
+  await writeFile(new URL(`../public/app-${size}.png`, import.meta.url),
+    new Resvg(compact, { fitTo: { mode: 'width', value: size } }).render().asPng())
+}
 // Fixed positions keep regenerated icons identical. Stars stay quiet behind the mark.
 const stars = [
   [10, 12, .12], [23, 7, .09], [40, 10, .14], [52, 16, .11],
