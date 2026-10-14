@@ -151,30 +151,31 @@ html, body, #root {
   gap: 10px;
 }
 
-/* a pill: a quiet word that expands in place into its slider and a close button */
+/* a control: a quiet word, just text like the rest, that expands in place into its slider and a close button */
 .pill {
   display: flex;
   align-items: center;
   height: 40px;
   padding: 0 4px;
-  border: 1px solid rgba(232, 228, 248, 0.35);
-  border-radius: 999px;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 300;
   font-style: italic;
   font-size: 14px;
   letter-spacing: 0.2em;
   color: rgba(232, 228, 248, 0.9);
-  opacity: 0.55;
-  transition: opacity 0.6s ease, border-color 0.6s ease;
+  /* faded while you're not reaching for them; clear on hover, or while open */
+  opacity: 0.4;
+  transition: opacity 0.6s ease;
 }
 .pill:hover,
 .pill:focus-within,
 .pill.open {
   opacity: 0.95;
 }
-.pill.on {
-  border-color: rgba(232, 228, 248, 0.55);
+/* drifting: the word a little brighter, so you can tell it's on */
+.pill.on .pill-label {
+  color: rgb(246, 243, 255);
+  text-shadow: 0 0 12px rgba(190, 175, 255, 0.6);
 }
 .pill button {
   background: none;
@@ -210,13 +211,14 @@ html, body, #root {
   text-align: right;
 }
 .pill-close {
-  width: 30px;
-  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   margin-left: 6px;
+  padding: 0;
   border-radius: 50%;
-  font-size: 18px;
-  font-style: normal;
-  line-height: 1;
 }
 .pill-close:hover {
   background: rgba(232, 228, 248, 0.12);
@@ -260,4 +262,13 @@ html, body, #root {
   border-radius: 50%;
   background: rgb(240, 236, 255);
   box-shadow: 0 0 10px rgba(190, 175, 255, 0.7);
+}
+
+/* while a corner control is open, the scroll hint steps out of its way */
+.scroll-hint {
+  transition: filter 0.4s ease;
+}
+html[data-open-fps] .scroll-hint,
+html[data-open-drift] .scroll-hint {
+  filter: opacity(0);
 }

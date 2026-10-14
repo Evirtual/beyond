@@ -284,6 +284,7 @@ function DriftToggle() {
   useEffect(() => {
     if (!on) setOpen(false)
   }, [on])
+  useOpenFlag('drift', open)
   return (
     <div className={'pill drift' + (on ? ' on' : '') + (open ? ' open' : '')}>
       {open ? (
@@ -310,7 +311,7 @@ function DriftToggle() {
             aria-label="stop drifting"
             title="stop drifting"
           >
-            ×
+            <CloseIcon />
           </button>
         </>
       ) : (
@@ -437,6 +438,23 @@ function AdaptiveResolution() {
   return null
 }
 
+/** While a corner control is open, the page knows (so the scroll hint can step out of its way). */
+function useOpenFlag(name: string, open: boolean) {
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-open-' + name, open)
+    return () => document.documentElement.removeAttribute('data-open-' + name)
+  }, [name, open])
+}
+
+/** A drawn cross (not a font glyph, which sits small and off-centre in this italic serif). */
+function CloseIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+      <path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 /** The frame-rate choices: auto, then fixed rates. */
 const FPS_STOPS = [0, 24, 30, 60, 120, 240]
 
@@ -474,6 +492,7 @@ function FpsControl() {
           : `${cap} fps`
   // like drift: a quiet pill that opens its slider when you click it, and closes it again
   const [open, setOpen] = useState(false)
+  useOpenFlag('fps', open)
   // the pill expands in place: the chosen rate, its slider and a close button replace its label
   return (
     <div className={'pill fps' + (open ? ' open' : '')}>
@@ -493,7 +512,7 @@ function FpsControl() {
             />
           </label>
           <button className="pill-close" onClick={() => setOpen(false)} aria-label="close" title="close">
-            ×
+            <CloseIcon />
           </button>
         </>
       ) : (
