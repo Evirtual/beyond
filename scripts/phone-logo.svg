@@ -2,7 +2,7 @@
 <defs>
   <linearGradient id="disk"><stop stop-color="#d9d2ff" stop-opacity=".1"/><stop offset=".25" stop-color="#f2edff" stop-opacity=".8"/><stop offset=".45" stop-color="#fffef7"/><stop offset=".7" stop-color="#e3dcff" stop-opacity=".7"/><stop offset="1" stop-color="#d1c8ff" stop-opacity=".12"/></linearGradient>
   <linearGradient id="halo" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f4efff"/><stop offset=".45" stop-color="#eae3ff" stop-opacity=".9"/><stop offset="1" stop-color="#cfc4ff" stop-opacity=".5"/></linearGradient>
-  <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="1.4"/></filter>
+  <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="2"/></filter>
   <filter id="soft" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation=".4"/></filter>
   <clipPath id="front"><rect x="0" y="32" width="64" height="32"/></clipPath>
   <g id="rings" fill="none" stroke="url(#disk)" stroke-width=".18">
@@ -33,12 +33,13 @@
   </g>
 </defs>
 <!-- Dense concentric disk, white-lilac upper lensing and a fine lower rim. -->
-<g transform="rotate(-15 32 32)">
+<g transform="rotate(-10 32 32)">
   <use href="#rings" stroke-opacity=".65"/>
   <use href="#rings" filter="url(#glow)"/>
   <circle cx="32" cy="32" r="10.8" fill="none" stroke="url(#halo)" stroke-width="4.5" filter="url(#glow)"/>
-  <path d="M21.2 32 A10.8 10.8 0 0 1 42.8 32" fill="none" stroke="#eee8ff" stroke-width="3" filter="url(#soft)"/>
+  <path d="M21.2 32 A10.8 10.8 0 0 1 42.8 32" fill="none" stroke="#eee8ff" stroke-width="4.5" filter="url(#glow)"/>
   <circle cx="32" cy="32" r="9.2" fill="#020207"/>
+  <use href="#rings" opacity=".3"/>
   <circle cx="32" cy="32" r="9.4" fill="none" stroke="#f5f0ff" stroke-width=".45"/>
   <g clip-path="url(#front)">
     <use href="#rings" filter="url(#soft)"/>
