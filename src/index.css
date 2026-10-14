@@ -151,7 +151,7 @@ canvas, .controls { touch-action: none; }
 /* the corner controls: fps and drift side by side, bottom right */
 .controls {
   position: fixed;
-  right: calc(max(24px, 2.2vw) + env(safe-area-inset-right, 0px));
+  right: calc(8px + env(safe-area-inset-right, 0px));
   bottom: calc(max(16px, 2.2vw) + env(safe-area-inset-bottom, 0px));
   z-index: 5;
   display: flex;
@@ -200,9 +200,10 @@ canvas, .controls { touch-action: none; }
 }
 /* the word keeps one width ('drift' / 'drifting', changing frame rates), so nothing beside it moves */
 .drift .pill-label {
-  width: 80px;
+  width: auto;
   text-align: left;
   padding-left: 4px;
+  padding-right: 0;
 }
 .fps .pill-label {
   width: 9.5em;
@@ -295,11 +296,8 @@ html[data-open-drift] .scroll-hint {
 
 @media (max-width: 600px), (pointer: coarse) and (max-height: 600px) {
   .controls {
-    right: calc(12px + env(safe-area-inset-right, 0px));
     animation: inscription-controls 11s ease-in-out 8s both;
   }
-  /* Remove the reserved trailing label space on narrow screens. */
-  .drift .pill-label { width: auto; padding-right: 4px; }
   .inscription {
     right: calc(28px + env(safe-area-inset-right, 0px));
   }
