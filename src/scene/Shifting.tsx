@@ -9,6 +9,7 @@ import type { Form } from './forms'
 import { useWorld } from './world'
 import { PIECES, type Mats } from './pieces'
 import { Touchable } from './tap'
+import { Shatterable, useShatter } from './shatter'
 
 /** Seconds for a piece to burn away or condense out of nothing. */
 const DISSOLVE_SECONDS = 4.5
@@ -132,10 +133,23 @@ function PieceView({ p, onGone }: { p: Piece; onGone: (id: number) => void }) {
     g.rotation.x = Math.sin(t * 0.05 + phase) * 0.06 + (body.off.y / Math.max(p.scale, 1)) * 0.15
   })
 
+  // about half the pieces break apart when touched (which ones is part of each piece's nature)
+  const breakable = useMemo(() => (((Math.sin(p.seed * 12.9898) * 43758.5453) % 1) + 1) % 1 < 0.5, [p.seed])
+  const shatter = useShatter()
+  const onTap = useMemo(() => (pt: THREE.Vector3) => shatter.current.tap?.(pt), [shatter])
+  const asleep = useMemo(() => () => shatter.current.broken, [shatter])
+  const matList = useMemo(() => [mats.stone, mats.dark, mats.crystal], [mats])
+
   return (
     <group ref={group} scale={p.scale}>
-      <Touchable>
-        <PieceBody p={p} m={mats} />
+      <Touchable onTap={breakable ? onTap : undefined} asleep={breakable ? asleep : undefined}>
+        {breakable ? (
+          <Shatterable materials={matList} seed={p.seed} handle={shatter}>
+            <PieceBody p={p} m={mats} />
+          </Shatterable>
+        ) : (
+          <PieceBody p={p} m={mats} />
+        )}
       </Touchable>
     </group>
   )

@@ -15,7 +15,7 @@ import { worlds, useWorld } from './world'
 export type BurstKind = 'rise' | 'fall' | 'spray' | 'ring'
 export type Burst = { color: string; kind: BurstKind; count?: number }
 
-type Touchable = { group: THREE.Group; burst?: Burst; onTap?: (point: THREE.Vector3) => void; jiggle: number }
+type Touchable = { group: THREE.Group; burst?: Burst; onTap?: (point: THREE.Vector3) => void; jiggle: number; asleep?: () => boolean }
 
 /** Per-world touch registry: what can be touched, and how the world bursts. */
 export type TouchRegistry = {
@@ -44,18 +44,19 @@ export const ripple = { pos: { value: new THREE.Vector3(0, -1e4, 0) }, time: { v
  * Wrap anything to make it touchable. The wrapper owns its own transform, so the
  * wobble never fights the child's own animation.
  */
-export function Touchable({ children, burst, onTap }: { children: ReactNode; burst?: Burst; onTap?: (point: THREE.Vector3) => void }) {
+/** asleep: while it returns true the thing ignores touches entirely (e.g. while it lies in pieces) */
+export function Touchable({ children, burst, onTap, asleep }: { children: ReactNode; burst?: Burst; onTap?: (point: THREE.Vector3) => void; asleep?: () => boolean }) {
   const w = useWorld()
   const def = useContext(DefaultBurst)
   const ref = useRef<THREE.Group>(null!)
   const item = useRef<Touchable | null>(null)
   useEffect(() => {
     const reg = registryFor(w, def)
-    const it: Touchable = { group: ref.current, burst, onTap, jiggle: -100 }
+    const it: Touchable = { group: ref.current, burst, onTap, jiggle: -100, asleep }
     item.current = it
     reg.items.add(it)
     return () => void reg.items.delete(it)
-  }, [w, def, burst, onTap])
+  }, [w, def, burst, onTap, asleep])
   useFrame((s) => {
     const it = item.current
     if (!it) return
@@ -188,14 +189,15 @@ function hitTest(clientX: number, clientY: number) {
   // the world's own camera: same eye and projection, at that world's depth
   raycaster.setFromCamera(ndc, w.camera)
   raycaster.far = 140
-  const groups = [...reg.items].map((i) => i.group)
+  const awake = [...reg.items].filter((i) => !i.asleep?.())
+  const groups = awake.map((i) => i.group)
   const hits = raycaster.intersectObjects(groups, true)
   if (!hits.length) return null
   const hit = hits[0]
   // which touchable owns the hit?
   let o: THREE.Object3D | null = hit.object
   while (o) {
-    for (const it of reg.items) if (it.group === o) return { reg, it, point: hit.point.clone() }
+    for (const it of awake) if (it.group === o) return { reg, it, point: hit.point.clone() }
     o = o.parent
   }
   return null

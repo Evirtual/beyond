@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <!-- the front half of the disk, which crosses in front of the hole -->
+    <clipPath id="front">
+      <rect x="0" y="32" width="64" height="32" transform="rotate(-15 32 32)"/>
+    </clipPath>
+  </defs>
+  <!-- the disk, behind -->
+  <ellipse cx="32" cy="32" rx="29" ry="9" fill="none" stroke="#ff9a3c" stroke-width="5" transform="rotate(-15 32 32)"/>
+  <!-- the hole: black, with a bright rim so it reads on dark tabs too -->
+  <circle cx="32" cy="32" r="15" fill="#000" stroke="#ffd59a" stroke-width="3"/>
+  <!-- the disk, in front -->
+  <ellipse cx="32" cy="32" rx="29" ry="9" fill="none" stroke="#ff9a3c" stroke-width="5" transform="rotate(-15 32 32)" clip-path="url(#front)"/>
+</svg>

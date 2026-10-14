@@ -278,26 +278,54 @@ function DriftToggle() {
     window.addEventListener('keydown', key)
     return () => window.removeEventListener('keydown', key)
   }, [])
+  // the pill expands in place: its slider and a close button replace its word.
+  // Opening it starts the drift; closing it (×) stops the drift.
+  const [open, setOpen] = useState(false)
+  useEffect(() => {
+    if (!on) setOpen(false)
+  }, [on])
   return (
-    <div className={'drift' + (on ? ' on' : '')}>
-      {on && (
-        <label className="drift-pace" title="pace (↑ / ↓)">
-          <span>slow</span>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={rateToSlider(rate)}
-            onChange={(e) => setPace(sliderToRate(Number(e.target.value)))}
-            aria-label="drift pace"
-          />
-          <span>fast</span>
-        </label>
+    <div className={'pill drift' + (on ? ' on' : '') + (open ? ' open' : '')}>
+      {open ? (
+        <>
+          <label className="pill-slider" title="pace (↑ / ↓)">
+            <span>slow</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={rateToSlider(rate)}
+              onChange={(e) => setPace(sliderToRate(Number(e.target.value)))}
+              aria-label="drift pace"
+            />
+            <span>fast</span>
+          </label>
+          <button
+            className="pill-close"
+            onClick={() => {
+              if (view.auto) toggle()
+              setOpen(false)
+            }}
+            aria-label="stop drifting"
+            title="stop drifting"
+          >
+            ×
+          </button>
+        </>
+      ) : (
+        <button
+          className="pill-label"
+          onClick={() => {
+            if (!view.auto) toggle()
+            setOpen(true)
+          }}
+          aria-pressed={on}
+          title="drift on by itself (space)"
+        >
+          {on ? 'drifting' : 'drift'}
+        </button>
       )}
-      <button className={'drift-toggle' + (on ? ' on' : '')} onClick={toggle} aria-pressed={on} title="drift on by itself (space)">
-        {on ? 'drifting' : 'drift'}
-      </button>
     </div>
   )
 }
@@ -444,20 +472,36 @@ function FpsControl() {
         : pace.actual > 0 && pace.actual < cap * 0.85
           ? `${cap} → ${pace.actual} fps`
           : `${cap} fps`
+  // like drift: a quiet pill that opens its slider when you click it, and closes it again
+  const [open, setOpen] = useState(false)
+  // the pill expands in place: the chosen rate, its slider and a close button replace its label
   return (
-    <label className="fps" title="frame rate: auto, or fixed (the screen's own rate is the limit)">
-      <input
-        type="range"
-        min={0}
-        max={FPS_STOPS.length - 1}
-        step={1}
-        value={Math.max(0, FPS_STOPS.indexOf(cap))}
-        onChange={(e) => choose(FPS_STOPS[Number(e.target.value)])}
-        aria-label="frame rate"
-        aria-valuetext={cap === 0 ? 'auto' : `${cap} frames per second`}
-      />
-      <span>{label}</span>
-    </label>
+    <div className={'pill fps' + (open ? ' open' : '')}>
+      {open ? (
+        <>
+          <label className="pill-slider" title="frame rate: auto, or fixed (the screen's own rate is the limit)">
+            <span className="pill-value">{cap === 0 ? 'auto' : `${cap}`}</span>
+            <input
+              type="range"
+              min={0}
+              max={FPS_STOPS.length - 1}
+              step={1}
+              value={Math.max(0, FPS_STOPS.indexOf(cap))}
+              onChange={(e) => choose(FPS_STOPS[Number(e.target.value)])}
+              aria-label="frame rate"
+              aria-valuetext={cap === 0 ? 'auto' : `${cap} frames per second`}
+            />
+          </label>
+          <button className="pill-close" onClick={() => setOpen(false)} aria-label="close" title="close">
+            ×
+          </button>
+        </>
+      ) : (
+        <button className="pill-label" onClick={() => setOpen(true)} aria-expanded={false} title="frame rate">
+          {label}
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -490,8 +534,11 @@ export default function App() {
       <Inscription />
       <DepthMarker step={step} />
       <ScrollHint />
-      <DriftToggle />
-      <FpsControl />
+      {/* the corner controls: their pills side by side on the bottom row, each slider opening above its own */}
+      <div className="controls">
+        <FpsControl />
+        <DriftToggle />
+      </div>
     </>
   )
 }
