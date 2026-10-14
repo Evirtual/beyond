@@ -74,16 +74,13 @@ export function WindowRig() {
   useEffect(() => {
     const now = () => performance.now() / 1000
     const push = (d: number, lim = DEPTH_STEP * 1.2) => {
+      // the journey only goes forward: scrolling or swiping back does nothing
+      if (d <= 0) return
       // never let the target run more than one world ahead of where you are
       const cur = stage2.current.depth
-      if (d !== 0 && Math.sign(d) !== lastDir.current) {
-        // Reversing should brake existing travel, not inherit its queued momentum.
-        target.current.depth = cur
-        stage1.current.depth = cur
-      }
       target.current.depth = THREE.MathUtils.clamp(target.current.depth + d, cur - lim, cur + lim)
       lastInput.current = now()
-      if (d !== 0) lastDir.current = Math.sign(d)
+      lastDir.current = 1
     }
     const onMove = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return
