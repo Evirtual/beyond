@@ -39,6 +39,19 @@ Built with React, Vite, three.js and React Three Fiber. The frame rate is paced 
 moment needs (fewer frames when you are still) and the resolution steps down if frames run
 slow, so it stays gentle on laptops.
 
+## Install on your phone
+
+Open the live site in Safari on iPhone and choose **Share → Add to Home Screen**,
+or choose **Install app / Add to Home screen** in Chrome on Android.
+Beyond requests fullscreen when installed and works offline after its first complete online load.
+The scene extends behind display cutouts; corner controls respect the device's safe areas.
+Updates become active once all open app windows and browser tabs are closed and reopened.
+
+The transparent browser favicon is kept separate from the dark, padded phone icons.
+Run `npm run icons` to regenerate those PNGs from `scripts/phone-logo.svg`.
+PWA caching is enabled in production builds; use `npm run build` and `npm run preview`
+to test it locally.
+
 ## Licence
 
 [AGPL-3.0](LICENSE).

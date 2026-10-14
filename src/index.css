@@ -6,6 +6,9 @@ html, body, #root {
   background: #000;
 }
 
+/* Paint the entire viewport; apply safe areas only to overlaid text/controls. */
+html { height: 100dvh; }
+
 .whisper {
   position: fixed;
   inset: 0;
@@ -32,8 +35,8 @@ html, body, #root {
 
 .inscription {
   position: fixed;
-  left: 28px;
-  bottom: 24px;
+  left: calc(28px + env(safe-area-inset-left, 0px));
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   pointer-events: none;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 300;
@@ -85,7 +88,7 @@ html, body, #root {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 7vh;
+  bottom: calc(7vh + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -136,19 +139,19 @@ html, body, #root {
 
 /* on phones the inscription spans the bottom; keep the hint clear of it */
 @media (max-width: 600px) {
-  .scroll-hint { bottom: 17vh; }
+  .scroll-hint { bottom: calc(17vh + env(safe-area-inset-bottom, 0px)); }
 }
 
 
 /* the corner controls: fps and drift side by side, bottom right */
 .controls {
   position: fixed;
-  right: max(16px, 2.2vw);
-  bottom: max(16px, 2.2vw);
+  right: calc(max(16px, 2.2vw) + env(safe-area-inset-right, 0px));
+  bottom: calc(max(16px, 2.2vw) + env(safe-area-inset-bottom, 0px));
   z-index: 5;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 
 /* a control: a quiet word, just text like the rest, that expands in place into its slider and a close button */
@@ -156,7 +159,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   height: 40px;
-  padding: 0 4px;
+  padding: 0 2px;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 300;
   font-style: italic;
@@ -186,16 +189,16 @@ html, body, #root {
   cursor: pointer;
 }
 .pill-label {
-  padding: 0 14px;
+  padding: 0 8px;
   height: 100%;
   white-space: nowrap;
 }
 /* the word keeps one width ('drift' / 'drifting', changing frame rates), so nothing beside it moves */
 .drift .pill-label {
-  width: 108px;
+  width: 88px;
 }
 .fps .pill-label {
-  width: 11.5em;
+  width: 10em;
 }
 .pill-slider {
   display: flex;
