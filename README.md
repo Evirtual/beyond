@@ -1,4 +1,4 @@
-<p align="center"><img src="public/pwa-512.png" width="112" alt="Beyond the Glass black hole"></p>
+<p align="center"><img src="public/app-128.png" width="112" alt="Beyond the Glass black hole"></p>
 
 # Beyond the Glass
 
