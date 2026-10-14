@@ -35,7 +35,7 @@ const ANCHOR_STRENGTH = 1 // 0 = plain translation, 1 = true window
 
 export const DEPTH_STEP = 26
 const WHEEL_GAIN = 0.03 // world units per wheel pixel (~9 mouse notches per world)
-const TOUCH_GAIN = 0.06
+const TOUCH_SCREEN_TRAVEL = 12 // one full-height swipe, independent of phone resolution
 
 /**
  * How big the hole ahead is: a speck when you enter a zone, growing slowly through
@@ -57,6 +57,8 @@ if (import.meta.env.DEV) (window as unknown as { __view: typeof view }).__view =
 export const mainCamera: { current: THREE.PerspectiveCamera | null } = { current: null }
 
 export function WindowRig() {
+  const canvas = useThree((s) => s.gl.domElement)
+  const zoom = useRef({ target: 1, current: 1 })
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   mainCamera.current = camera
   // depth starts slightly behind the first world and glides in during the opening
@@ -71,9 +73,8 @@ export function WindowRig() {
 
   useEffect(() => {
     const now = () => performance.now() / 1000
-    const push = (d: number) => {
+    const push = (d: number, lim = DEPTH_STEP * 1.2) => {
       // never let the target run more than one world ahead of where you are
-      const lim = DEPTH_STEP * 1.2
       const cur = stage2.current.depth
       target.current.depth = THREE.MathUtils.clamp(target.current.depth + d, cur - lim, cur + lim)
       lastInput.current = now()
@@ -97,12 +98,32 @@ export function WindowRig() {
     }
     let touchY: number | null = null
     let touchStartX = 0
+    let gestureActive = false
+    let pinching = false
+    let pinchDistance = 1
+    let pinchZoom = 1
+    const distance = (e: TouchEvent) => Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY,
+    )
     const touchToPointer = (t: Touch) => {
       pointer.ndc.set((t.clientX / window.innerWidth) * 2 - 1, -((t.clientY / window.innerHeight) * 2 - 1))
       pointer.present = true
     }
     const onTouchStart = (e: TouchEvent) => {
-      if ((e.target as Element).closest('.controls')) return
+      if (e.target !== canvas && !gestureActive) return
+      gestureActive = true
+      if (e.touches.length >= 2) {
+        pinching = true
+        pinchDistance = Math.max(1, distance(e))
+        pinchZoom = zoom.current.current
+        touchY = null
+        pointer.present = false
+        target.current.x = 0
+        target.current.y = 0
+        return
+      }
+      if (pinching) return
       touchY = e.touches[0]?.clientY ?? null
       if (e.touches[0]) {
         touchStartX = e.touches[0].clientX
@@ -110,16 +131,30 @@ export function WindowRig() {
         pointer.smooth.copy(pointer.ndc) // a finger lands, it doesn't glide in
       }
     }
-    const onTouchEnd = () => {
+    const onTouchEnd = (e: TouchEvent) => {
       touchY = null
+      zoom.current.target = 1
+      // After a pinch, don't turn the remaining finger into a travel swipe.
+      if (e.touches.length === 0 || e.type === 'touchcancel') {
+        gestureActive = false
+        pinching = false
+      }
       target.current.x = 0
       target.current.y = 0
       pointer.present = false
     }
     const onTouchMove = (e: TouchEvent) => {
+      if (!gestureActive) return
+      if (pinching) {
+        if (e.touches.length >= 2) {
+          zoom.current.target = THREE.MathUtils.clamp(pinchZoom * distance(e) / pinchDistance, 1, 2.5)
+        }
+        return
+      }
       const y = e.touches[0]?.clientY
       if (touchY === null || y === undefined) return
-      push((touchY - y) * TOUCH_GAIN)
+      const delta = THREE.MathUtils.clamp(touchY - y, -50, 50)
+      push(delta / window.innerHeight * TOUCH_SCREEN_TRAVEL, DEPTH_STEP * 0.25)
       touchY = y
       // Lean from horizontal travel, not where a vertical swipe happens to start.
       const dx = e.touches[0].clientX - touchStartX
@@ -142,12 +177,16 @@ export function WindowRig() {
       window.removeEventListener('wheel', onWheel)
       window.removeEventListener('touchstart', onTouchStart)
       window.removeEventListener('touchmove', onTouchMove)
+      canvas.style.transform = ''
     }
-  }, [])
+  }, [canvas])
 
   useFrame((state, rawDt) => {
     if (import.meta.env.DEV) (window as unknown as { __frameStart: number }).__frameStart = performance.now()
     const dt = Math.min(rawDt, 1 / 20)
+    zoom.current.current = damp(zoom.current.current, zoom.current.target, 12, dt)
+    if (Math.abs(zoom.current.current - 1) < 0.001 && zoom.current.target === 1) zoom.current.current = 1
+    canvas.style.transform = zoom.current.current === 1 ? '' : `scale(${zoom.current.current})`
     const t = state.clock.elapsedTime
     const tg = target.current
     const s1 = stage1.current

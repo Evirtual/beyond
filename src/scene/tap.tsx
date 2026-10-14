@@ -211,8 +211,14 @@ export function TapInput() {
     const el = gl.domElement
     let down: { x: number; y: number; t: number } | null = null
     let lastHover = 0
-    const onDown = (e: PointerEvent) => (down = { x: e.clientX, y: e.clientY, t: performance.now() })
+    const fingers = new Set<number>()
+    const onDown = (e: PointerEvent) => {
+      fingers.add(e.pointerId)
+      down = fingers.size === 1 ? { x: e.clientX, y: e.clientY, t: performance.now() } : null
+    }
+    const onCancel = (e: PointerEvent) => { fingers.delete(e.pointerId); down = null }
     const onUp = (e: PointerEvent) => {
+      fingers.delete(e.pointerId)
       if (!down) return
       const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y)
       const quick = performance.now() - down.t < 450
@@ -236,10 +242,12 @@ export function TapInput() {
     }
     el.addEventListener('pointerdown', onDown)
     el.addEventListener('pointerup', onUp)
+    el.addEventListener('pointercancel', onCancel)
     el.addEventListener('pointermove', onMove)
     return () => {
       el.removeEventListener('pointerdown', onDown)
       el.removeEventListener('pointerup', onUp)
+      el.removeEventListener('pointercancel', onCancel)
       el.removeEventListener('pointermove', onMove)
     }
   }, [gl, clock])
