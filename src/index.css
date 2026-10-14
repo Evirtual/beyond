@@ -151,7 +151,7 @@ html { height: 100dvh; }
   z-index: 5;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
 }
 
 /* a control: a quiet word, just text like the rest, that expands in place into its slider and a close button */
@@ -195,10 +195,10 @@ html { height: 100dvh; }
 }
 /* the word keeps one width ('drift' / 'drifting', changing frame rates), so nothing beside it moves */
 .drift .pill-label {
-  width: 88px;
+  width: 80px;
 }
 .fps .pill-label {
-  width: 10em;
+  width: 9.5em;
 }
 .pill-slider {
   display: flex;
@@ -274,4 +274,22 @@ html { height: 100dvh; }
 html[data-open-fps] .scroll-hint,
 html[data-open-drift] .scroll-hint {
   filter: opacity(0);
+}
+
+/* The inscription runs from 8.5s to 18.5s. Clear its row half a second
+   beforehand and restore the controls only after the words disappear.
+   Visibility also removes hidden controls from touch and keyboard navigation. */
+@keyframes inscription-controls {
+  0%, 100% { opacity: 1; visibility: visible; }
+  4.545%, 95.455% { opacity: 0; visibility: hidden; }
+}
+
+@media (max-width: 600px), (pointer: coarse) and (max-height: 600px) {
+  .controls { animation: inscription-controls 11s ease-in-out 8s both; }
+  .inscription {
+    right: calc(28px + env(safe-area-inset-right, 0px));
+  }
+  /* Keep an active control usable; defer to the user's interaction. */
+  .controls:focus-within { animation: none; }
+  #root:has(.controls:focus-within) .inscription { visibility: hidden; }
 }
