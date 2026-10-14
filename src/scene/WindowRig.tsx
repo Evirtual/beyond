@@ -96,19 +96,24 @@ export function WindowRig() {
       push(THREE.MathUtils.clamp(px, -160, 160) * WHEEL_GAIN)
     }
     let touchY: number | null = null
+    let touchStartX = 0
     const touchToPointer = (t: Touch) => {
       pointer.ndc.set((t.clientX / window.innerWidth) * 2 - 1, -((t.clientY / window.innerHeight) * 2 - 1))
       pointer.present = true
     }
     const onTouchStart = (e: TouchEvent) => {
+      if ((e.target as Element).closest('.controls')) return
       touchY = e.touches[0]?.clientY ?? null
       if (e.touches[0]) {
+        touchStartX = e.touches[0].clientX
         touchToPointer(e.touches[0])
         pointer.smooth.copy(pointer.ndc) // a finger lands, it doesn't glide in
       }
     }
     const onTouchEnd = () => {
       touchY = null
+      target.current.x = 0
+      target.current.y = 0
       pointer.present = false
     }
     const onTouchMove = (e: TouchEvent) => {
@@ -116,8 +121,10 @@ export function WindowRig() {
       if (touchY === null || y === undefined) return
       push((touchY - y) * TOUCH_GAIN)
       touchY = y
-      // a touch drag also leans the viewpoint a little, and pushes what it touches
-      target.current.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1
+      // Lean from horizontal travel, not where a vertical swipe happens to start.
+      const dx = e.touches[0].clientX - touchStartX
+      const lean = Math.sign(dx) * Math.max(0, Math.abs(dx) - 8)
+      target.current.x = THREE.MathUtils.clamp(lean / window.innerWidth * 2, -1, 1)
       touchToPointer(e.touches[0])
     }
     window.addEventListener('pointermove', onMove)
