@@ -16,7 +16,9 @@ let hole = between('float show = smoothstep', '\n          }\n          if (uHol
 hole = hole.replace(/if \(uPortal > 0\.5\) \{[\s\S]*?\n            \}/, '')
 // The far disk is occluded by the black opening; retain the near disk in front.
 hole = hole.replace('disk * (1.0 - nearSide) * 0.35 * show', 'disk * (1.0 - nearSide) * 0.35 * show * outside')
-hole = hole.replace('outer = rs * 5.0', 'outer = rs * 3.55')
+hole = hole.replace('outer = rs * 5.0', 'outer = rs * 3.65')
+// Carry the visible disk farther outward, then fade before the icon boundary.
+hole = hole.replace('smoothstep(outer, outer * 0.55, dr)', 'smoothstep(outer, outer * 0.8, dr)')
 const shader = `precision highp float;
 varying vec2 vUv;
 const float uTime = 38.0;
@@ -39,7 +41,7 @@ const browser = await chromium.launch({
 try {
   const page = await browser.newPage()
   for (const compact of [false, true]) {
-  const iconShader = compact ? shader.replace('float rs = 0.135;', 'float rs = 0.16;').replace('outer = rs * 3.55', 'outer = rs * 3.0').replace('gl_FragColor = vec4(max(col * 1.5, 0.0), 1.0);', 'vec3 c = clamp(col * 1.5, 0.0, 1.0); float a = hr < rs ? 1.0 : max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c / max(a, 0.001), a);') : shader
+  const iconShader = compact ? shader.replace('float rs = 0.135;', 'float rs = 0.16;').replace('outer = rs * 3.65', 'outer = rs * 3.05').replace('gl_FragColor = vec4(max(col * 1.5, 0.0), 1.0);', 'vec3 c = clamp(col * 1.5, 0.0, 1.0); float a = hr < rs ? 1.0 : max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c / max(a, 0.001), a);') : shader
   const outputs = await page.evaluate(({ shader, compact }) => {
     const canvas = document.createElement('canvas')
     canvas.width = canvas.height = 1536
