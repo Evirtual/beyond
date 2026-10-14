@@ -41,7 +41,7 @@ const browser = await chromium.launch({
 try {
   const page = await browser.newPage()
   for (const compact of [false, true]) {
-  const iconShader = compact ? shader.replace('float rs = 0.135;', 'float rs = 0.16;').replace('outer = rs * 3.65', 'outer = rs * 3.05').replace('gl_FragColor = vec4(max(col * 1.5, 0.0), 1.0);', 'vec3 c = clamp(col * 1.5, 0.0, 1.0); float a = hr < rs ? 1.0 : max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c / max(a, 0.001), a);') : shader
+  const iconShader = compact ? shader.replace('float rs = 0.135;', 'float rs = 0.19;').replace('outer = rs * 3.65', 'outer = rs * 2.55').replace('rs * 0.035 + 0.0008', 'rs * 0.10 + 0.0008').replace('diskBand * 1.6', 'diskBand * 3.2').replace('float streaks = 0.35 + 0.9 * turb + 0.8 * clumps;', 'float streaks = 1.2;').replace('gl_FragColor = vec4(max(col * 1.5, 0.0), 1.0);', 'vec3 c = clamp(col * 1.5, 0.0, 1.0); float a = hr < rs ? 1.0 : max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c / max(a, 0.001), a);') : shader
   const outputs = await page.evaluate(({ shader, compact }) => {
     const canvas = document.createElement('canvas')
     canvas.width = canvas.height = 1536
