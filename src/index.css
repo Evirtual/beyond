@@ -151,12 +151,12 @@ canvas, .controls { touch-action: none; }
 /* the corner controls: fps and drift side by side, bottom right */
 .controls {
   position: fixed;
-  right: calc(max(16px, 2.2vw) + env(safe-area-inset-right, 0px));
+  right: calc(max(24px, 2.2vw) + env(safe-area-inset-right, 0px));
   bottom: calc(max(16px, 2.2vw) + env(safe-area-inset-bottom, 0px));
   z-index: 5;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 10px;
 }
 
 /* a control: a quiet word, just text like the rest, that expands in place into its slider and a close button */
