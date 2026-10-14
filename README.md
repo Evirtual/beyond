@@ -48,7 +48,11 @@ The scene extends behind display cutouts; corner controls respect the device's s
 Updates become active once all open app windows and browser tabs are closed and reopened.
 
 The transparent browser favicon is kept separate from the dark, padded phone icons.
-Run `npm run icons` to regenerate those PNGs from `scripts/phone-logo.svg`.
+Run `npx playwright install chromium` once, then `npm run icons` to render PNGs
+directly from the black-hole shader in `src/scene/Glass.tsx`. Alternatively set
+`ICON_BROWSER_CHANNEL=msedge` to use an installed Edge browser.
+The generator freezes the animation and uses pale lilac lighting on black;
+small transparent icons use a closer crop for readability.
 PWA caching is enabled in production builds; use `npm run build` and `npm run preview`
 to test it locally.
 
