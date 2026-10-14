@@ -8,10 +8,8 @@ import { Distant } from './scene/Distant'
 import { Foreground, Debris } from './scene/Near'
 import { ShiftingMidground, Wisps } from './scene/Shifting'
 import { Motes } from './scene/Particles'
-import { view } from './scene/state'
+import { pace, view } from './scene/state'
 import { WorldView, useWorld } from './scene/world'
-import { UNIVERSES } from './scene/universes'
-import { realityFor } from './scene/reality'
 import { BurstField, TapInput, type Burst } from './scene/tap'
 import type { FormName } from './scene/moment'
 
@@ -89,20 +87,8 @@ function GlassEdge() {
   )
 }
 
-/** Everything inside one zone (one colour, all its shades, flown through continuously). */
+/** Everything inside one zone. For now every zone is home: the black hole leads home again. */
 function WorldContents() {
-  const w = useWorld()
-  const Universe = UNIVERSES[w.formName]
-  if (Universe)
-    return (
-      <>
-        {/* the colour's own air and space around it, and home's elements living in it */}
-        <Universe />
-        {/* folded into pattern, the world needs less of everything: lighter on a laptop */}
-        <HomeContents sky={false} light />
-        <BurstField defaultBurst={BURSTS[w.formName]} />
-      </>
-    )
   return (
     <>
       <HomeContents />
@@ -112,7 +98,7 @@ function WorldContents() {
 }
 
 /** Home: the floating world you arrive in. */
-function HomeContents({ sky = true, light = false }: { sky?: boolean; light?: boolean }) {
+function HomeContents() {
   const w = useWorld()
   // dev-only: how long building this zone blocks the page (render → commit)
   const t0 = useMemo(() => performance.now(), [])
@@ -125,22 +111,19 @@ function HomeContents({ sky = true, light = false }: { sky?: boolean; light?: bo
   const moteSeed = useMemo(() => Math.floor(w.rng('motes')() * 1e6), [w])
   return (
     <>
-      {sky && <Sky />}
+      <Sky />
       <Distant />
       <LightShafts />
       <HazeLayers />
       <ShiftingMidground />
-      <Wisps glow={!light} />
-      {/* in a pattern realm nothing presses against the glass — so close, it only folds into blobs.
-          Its three lights stay (dark), so every world keeps the same light count */}
-      {light ? Array.from({ length: 3 }, (_, i) => <pointLight key={'pad' + i} intensity={0} />) : <GlassEdge />}
+      <Wisps />
+      <GlassEdge />
       {/* as dense as at home: a zone of several shades shows them all at once, so fewer per shade */}
-      {/* (folded into a mandala, scattered shards only turn into meaningless specks: home only) */}
-      {!light && <Debris perShade={Math.round(90 / w.length)} />}
+      <Debris perShade={Math.round(90 / w.length)} />
       {/* deep space motes */}
-      <Motes count={light ? 1400 : 3200} zMin={3} zMax={90} spread={0.75} size={1.4} softness={1} rise={0.06} opacity={1} fog={0.018} seed={moteSeed} />
+      <Motes count={3200} zMin={3} zMax={90} spread={0.75} size={1.4} softness={1} rise={0.06} opacity={1} fog={0.018} seed={moteSeed} />
       {/* dust right behind the glass: big, out of focus, slow */}
-      {!light && <Motes count={46} zMin={0.6} zMax={3.2} spread={0.9} size={0.7} softness={2} rise={0.025} opacity={0.75} fog={0} seed={moteSeed + 1} />}
+      <Motes count={46} zMin={0.6} zMax={3.2} spread={0.9} size={0.7} softness={2} rise={0.025} opacity={0.75} fog={0} seed={moteSeed + 1} />
     </>
   )
 }
@@ -152,15 +135,25 @@ function HomeContents({ sky = true, light = false }: { sky?: boolean; light?: bo
  */
 function Worlds({ step }: { step: number }) {
   const here = zoneOf(step).start
+  // a buffer of worlds already built: two behind and two ahead of the one you're in. Arriving
+  // anywhere, the next world (and the previous) already exist, so a black hole never opens onto
+  // nothing; the ones being built are two steps away, needed long after the arrival settles
   const wanted = useMemo(() => {
     const z = zoneOf(here)
-    return [zoneOf(here - 1).start, here, z.start + z.length]
+    const prev = zoneOf(here - 1).start
+    const next = z.start + z.length
+    return [zoneOf(prev - 1).start, prev, here, next, next + zoneOf(next).length]
   }, [here])
   const [mounted, setMounted] = useState<number[]>(wanted)
   useEffect(() => {
-    // the zone you're in must exist now (normally it already does)
-    setMounted((cur) => (cur.includes(here) ? cur : [...cur, here]))
-    const id = setTimeout(() => startTransition(() => setMounted(wanted)), 700)
+    // the zone you're in, and the very next one, must exist now (normally they already do; only
+    // racing through holes faster than the buffer refills needs them at once — a small hitch
+    // beats a black hole with nothing inside)
+    const urgent = [here, wanted[3]]
+    setMounted((cur) => (urgent.every((z) => cur.includes(z)) ? cur : [...cur, ...urgent.filter((z) => !cur.includes(z))]))
+    // the rest of the buffer is built once the arrival has settled (about 2.5 s), when nothing is
+    // moving fast, so building it never lands in the middle of a crossing
+    const id = setTimeout(() => startTransition(() => setMounted(wanted)), 2500)
     return () => clearTimeout(id)
   }, [here, wanted])
   return (
@@ -225,9 +218,7 @@ function DepthMarker({ step }: { step: number }) {
   }, [step])
   if (shown === null) return null
   const sp = spectrumAt(shown)
-  const reality = realityFor(shown)
-  // each reality is named, not coloured: its colours are dealt fresh every journey
-  const label = sp ? `${reality?.name ?? ''} · ${sp.shade.name}` : 'home'
+  const label = sp ? `${sp.hue.name} · ${sp.shade.name}` : 'home'
   const hint = !sp
     ? 'the world you arrived in'
     : sp.index === DEPTH_CYCLE - 1
@@ -320,7 +311,11 @@ function FrameGovernor() {
   const invalidate = useThree((s) => s.invalidate)
   useEffect(() => {
     let raf = 0
-    let last = 0
+    let tick = 0
+    let lastNow = 0
+    let due = 0
+    let drawn = 0
+    let countFrom = performance.now()
     let inputAt = performance.now()
     const start = performance.now()
     const input = () => (inputAt = performance.now())
@@ -328,12 +323,45 @@ function FrameGovernor() {
     evs.forEach((e) => window.addEventListener(e, input, { passive: true }))
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop)
-      // smooth when it matters: while you move, through the opening, and through a crossing
-      const active = now - inputAt < 1500 || now - start < 5000 || view.hole > 0.6 || view.emerge > 0.01
-      const fps = active ? 60 : view.auto ? 40 : 30
-      if (now - last >= 1000 / fps - 2) {
-        last = now
+      // the screen's own rate, measured from its frames (ignoring stalls and paused tabs)
+      const dt = now - lastNow
+      lastNow = now
+      if (dt > 4 && dt < 50) pace.hz += (1000 / dt - pace.hz) * 0.05
+      // full rate whenever anything moves: your hand, scrolling, drifting, the hole's pull, the
+      // whole approach to a black hole and the arrival beyond it, and the opening
+      pace.full =
+        now - inputAt < 1500 ||
+        now - start < 5000 ||
+        view.auto ||
+        Math.abs(view.speed) > 0.8 ||
+        view.hole > 0.02 ||
+        view.emerge > 0.001 ||
+        view.flash > 0.001 ||
+        view.veil > 0.001
+      let draw: boolean
+      if (pace.cap > 0) {
+        // a chosen rate: frames due at that rate (never faster than the screen can show them)
+        if (now >= due - 1) {
+          due = Math.max(due + 1000 / pace.cap, now - 1000 / pace.cap)
+          draw = true
+        } else draw = false
+        pace.full = true
+      } else {
+        // auto: in even steps of the screen's rate (every frame, or every second one), never a
+        // ragged rate like 40 on a 60 Hz screen — and on fast screens, at least 60
+        const target = pace.full ? 60 : 30
+        const every = Math.max(1, Math.round(pace.hz / target))
+        draw = ++tick % every === 0
+      }
+      if (draw) {
         invalidate()
+        drawn++
+      }
+      // what's really being drawn, for the frame-rate control to show
+      if (now - countFrom >= 1000) {
+        pace.actual = Math.round((drawn * 1000) / (now - countFrom))
+        drawn = 0
+        countFrom = now
       }
     }
     raf = requestAnimationFrame(loop)
@@ -355,16 +383,23 @@ function AdaptiveResolution() {
   const st = useRef({ dpr: max, avg: 1 / 60, since: 0 })
   useFrame((_, dt) => {
     const a = st.current
-    // ignore stalls longer than a quarter second (tab switches, a world being built)
-    if (dt > 0.25) return
+    // only judge while frames are meant to come at full rate (a deliberately slower pace is not
+    // slowness), never change it in the middle of a crossing (resizing the buffers would stall
+    // it), and ignore stalls longer than a quarter second (tab switches, a world being built)
+    const crossing = view.hole > 0.02 || view.emerge > 0.001 || view.veil > 0.001
+    if (!pace.full || dt > 0.25) {
+      a.since = 0
+      return
+    }
+    const expected = 1 / Math.min(pace.hz, pace.cap > 0 ? pace.cap : 60)
     a.avg += (dt - a.avg) * 0.05
     a.since += dt
-    if (a.since < 2) return
-    if (a.avg > 1 / 45 && a.dpr > 0.75) {
+    if (a.since < 3 || crossing) return
+    if (a.avg > expected * 1.3 && a.dpr > 0.75) {
       a.dpr = Math.max(0.75, a.dpr - 0.25)
       setDpr(a.dpr)
       a.since = 0
-    } else if (a.avg < 1 / 58 && a.dpr < max && a.since > 6) {
+    } else if (a.avg < expected * 1.05 && a.dpr < max && a.since > 8) {
       a.dpr = Math.min(max, a.dpr + 0.25)
       setDpr(a.dpr)
       a.since = 0
@@ -372,6 +407,58 @@ function AdaptiveResolution() {
   })
   if (import.meta.env.DEV) (window as unknown as { __dpr?: () => number }).__dpr = () => st.current.dpr
   return null
+}
+
+/** The frame-rate choices: auto, then fixed rates. */
+const FPS_STOPS = [0, 24, 30, 60, 120, 240]
+
+/**
+ * Frame rate: auto (full rate while anything moves, gentler when still) or a fixed rate. The
+ * screen is the limit — the label says what is really being drawn, not just what was asked for.
+ * Quiet in the corner like drift, almost invisible until you reach for it.
+ */
+function FpsControl() {
+  const [cap, setCap] = useState(pace.cap)
+  const [, refresh] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => refresh((n) => n + 1), 1000)
+    return () => clearInterval(id)
+  }, [])
+  const choose = (v: number) => {
+    pace.cap = v
+    setCap(v)
+    try {
+      localStorage.setItem('fpsCap', String(v))
+    } catch {
+      // private window: it just won't be remembered
+    }
+  }
+  const screen = Math.round(pace.hz)
+  // your choice shows at once; the measured rate is added only when it tells you something —
+  // the screen can't show that many, or this machine can't keep up
+  const label =
+    cap === 0
+      ? `auto · ${pace.actual} fps`
+      : cap > screen + 2
+        ? `${cap} · screen ${screen}`
+        : pace.actual > 0 && pace.actual < cap * 0.85
+          ? `${cap} → ${pace.actual} fps`
+          : `${cap} fps`
+  return (
+    <label className="fps" title="frame rate: auto, or fixed (the screen's own rate is the limit)">
+      <input
+        type="range"
+        min={0}
+        max={FPS_STOPS.length - 1}
+        step={1}
+        value={Math.max(0, FPS_STOPS.indexOf(cap))}
+        onChange={(e) => choose(FPS_STOPS[Number(e.target.value)])}
+        aria-label="frame rate"
+        aria-valuetext={cap === 0 ? 'auto' : `${cap} frames per second`}
+      />
+      <span>{label}</span>
+    </label>
+  )
 }
 
 export default function App() {
@@ -404,6 +491,7 @@ export default function App() {
       <DepthMarker step={step} />
       <ScrollHint />
       <DriftToggle />
+      <FpsControl />
     </>
   )
 }

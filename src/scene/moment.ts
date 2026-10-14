@@ -38,12 +38,20 @@ export const seedFromUrl = /^[0-9a-f]{8}$/i.test(params.get('v') ?? '')
 export const homeSeed = makeSeed()
 export const viewId = homeSeed.toString(16).padStart(8, '0')
 
-/** Home, then the spectrum (6 hues × light / middle / dark), then home again. */
-export const DEPTH_CYCLE = 1 + 6 * 3
+/**
+ * For now the journey is home alone: every black hole leads back into home. (The realms beyond —
+ * the spectrum of 6 hues × light / middle / dark — are switched off while they are reimagined;
+ * set this back to 1 + 6 * 3 to bring the spectrum's zones back.)
+ */
+export const DEPTH_CYCLE = 1
 
-/** Seed of the world at a given depth step. Deterministic, so scrolling back retraces. */
+/**
+ * Seed of the world at a given depth step. The home you arrived in keeps the visit's own seed;
+ * every home beyond a black hole is dealt its own, as different as a fresh visit would be.
+ * Deterministic, so going back through a black hole returns you to the very home you left.
+ */
 export function seedForStep(step: number) {
-  if (((step % DEPTH_CYCLE) + DEPTH_CYCLE) % DEPTH_CYCLE === 0) return homeSeed
+  if (step === 0) return homeSeed
   let h = (homeSeed ^ Math.imul(step, 0x85ebca6b)) >>> 0
   h = Math.imul(h ^ (h >>> 16), 0x7feb352d) >>> 0
   return (h ^ (h >>> 15)) >>> 0

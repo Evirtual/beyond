@@ -19,18 +19,33 @@ const driftRateSaved = (() => {
   }
 })()
 
+/** the frame rate chosen last time (0 = auto), kept in this browser only */
+const capSaved = (() => {
+  try {
+    const v = Number(localStorage.getItem('fpsCap'))
+    return [0, 24, 30, 60, 120, 240].includes(v) ? v : 0
+  } catch {
+    return 0
+  }
+})()
+
+/** How frames are paced right now (see FrameGovernor in App.tsx). */
+export const pace = {
+  /** the chosen frame rate: 0 = auto (full rate while anything moves, 30 when still), else a fixed rate */
+  cap: capSaved,
+  /** frames actually drawn in the last second */
+  actual: 0,
+  /** true while drawing every frame the screen can show (movement, a crossing, the opening) */
+  full: true,
+  /** the screen's refresh rate, measured */
+  hz: 60,
+}
+
 export const view = {
   /** drift pace: 0.25 (a minute a shade) … 4 (a few seconds a shade) */
   driftRate: driftRateSaved,
   /** drift: the view flies on by itself, no scrolling needed */
   auto: driftSaved,
-  /** 0..1: how still you've been lately (grows slowly, falls fast when you move) */
-  still: 0,
-  /** 0..1: after long stillness, the boundaries between screen, world and you dissolve */
-  oneness: 0,
-  /** where your attention rests on the screen (0..1, y up) */
-  px: 0.5,
-  py: 0.55,
   /** smoothed viewpoint offset, -1..1 on each axis */
   x: 0,
   y: 0,

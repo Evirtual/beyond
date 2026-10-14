@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { rockGeometry } from './geometry'
 import { range } from './rng'
-import { dissolvable, dissolveStyle, type DissolveUniform } from './dissolve'
+import { dissolvable, type DissolveUniform } from './dissolve'
 import { useWorld } from './world'
 import type { Form } from './forms'
 
@@ -17,11 +17,10 @@ const dark = new THREE.Color('#030308')
 const tmp = new THREE.Color()
 
 export function useSilhouette(dist: number, u?: DissolveUniform) {
-  const w = useWorld()
-  const { light } = w
+  const { light } = useWorld()
   const mat = useMemo(() => {
     const base = new THREE.MeshLambertMaterial({ color: new THREE.Color('#1b1a2a'), emissive: new THREE.Color(), fog: false })
-    return u ? dissolvable(base, u, light.glow, dissolveStyle(w)) : base
+    return u ? dissolvable(base, u, light.glow) : base
   }, [u])
   const t = THREE.MathUtils.smoothstep(dist, 70, 420)
   useFrame(() => {

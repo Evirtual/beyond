@@ -1,11 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react'
-import { createPortal, useFrame } from '@react-three/fiber'
+import { createPortal, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { FORMS, formFor, type Form } from './forms'
 import { applySpectrum, formNameFor, makeLightState, rngForSeed, seedForStep, zoneOf, type FormName, type LightState } from './moment'
 import { disposeWorldMats, makeWorldMats, type WorldMats } from './materials'
 import { view } from './state'
-import { realityFor, type Reality } from './reality'
 import { DEPTH_STEP, mainCamera } from './WindowRig'
 
 export const FOG_DENSITY = 0.034
@@ -23,8 +22,6 @@ export type World = {
   seed: number
   form: Form
   formName: FormName
-  /** the reality this world was dealt (null at home): its law, mood, and way of coming and going */
-  reality: Reality | null
   rng: (label: string) => () => number
   mats: WorldMats
   light: LightState
@@ -54,7 +51,6 @@ function makeWorld(start: number): World {
     seed,
     form,
     formName: formNameFor(start),
-    reality: realityFor(start),
     rng,
     mats: makeWorldMats(start, form, rng('crystals')),
     light: makeLightState(),
@@ -124,13 +120,20 @@ function WorldFrame() {
 /** Mounts one world into its own scene and registers it. */
 export function WorldView({ start, children }: { start: number; children: ReactNode }) {
   const w = useMemo(() => makeWorld(start), [start])
+  const gl = useThree((s) => s.gl)
   useEffect(() => {
     worlds.set(start, w)
+    // compile its shaders in the background (in parallel, where the browser allows), so the first
+    // time it's drawn — inside a black hole — costs nothing extra
+    const id = setTimeout(() => {
+      gl.compileAsync(w.scene, w.camera).catch(() => {})
+    }, 50)
     return () => {
+      clearTimeout(id)
       worlds.delete(start)
       disposeWorldMats(w.mats)
     }
-  }, [start, w])
+  }, [start, w, gl])
   return createPortal(
     <WorldContext.Provider value={w}>
       <WorldFrame />

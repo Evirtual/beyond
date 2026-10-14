@@ -166,7 +166,7 @@ export function WindowRig() {
       const pull = BASE_PULL * Math.exp(3 * closeness) * opening + 4.5 * near * near
       // while drifting, your chosen pace sets the hole's pull too — slow stays slow to the end
       tg.depth += dir * pull * (view.auto ? view.driftRate : 1) * dt
-      // drifting: carried gently forward, through every reality and home again, without end
+      // drifting: carried gently forward, through black hole after black hole, without end
       if (view.auto) {
         lastDir.current = 1
         tg.depth += DRIFT_SPEED * view.driftRate * opening * dt

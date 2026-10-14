@@ -139,10 +139,6 @@ html, body, #root {
   .scroll-hint { bottom: 17vh; }
 }
 
-/* after long stillness the words dissolve with everything else */
-.whisper, .inscription, .depth-marker, .scroll-hint {
-  filter: opacity(calc(1 - var(--oneness, 0)));
-}
 
 /* drift: a quiet word in the corner — barely there until you reach for it */
 .drift {
@@ -153,7 +149,6 @@ html, body, #root {
   display: flex;
   align-items: center;
   gap: 12px;
-  filter: opacity(calc(1 - var(--oneness, 0)));
 }
 .drift-pace {
   display: flex;
@@ -161,15 +156,15 @@ html, body, #root {
   gap: 8px;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-style: italic;
-  font-size: 13px;
+  font-size: 14px;
   letter-spacing: 0.2em;
   color: rgba(232, 228, 248, 0.9);
-  opacity: 0.22;
+  opacity: 0.55;
   transition: opacity 0.6s ease;
 }
 .drift:hover .drift-pace,
 .drift-pace:focus-within {
-  opacity: 0.85;
+  opacity: 0.95;
 }
 .drift-pace input {
   width: 110px;
@@ -177,12 +172,12 @@ html, body, #root {
   cursor: pointer;
 }
 @media (hover: none) {
-  .drift-pace { opacity: 0.45; }
+  .drift-pace { opacity: 0.7; }
 }
 .drift-toggle {
   padding: 10px 14px;
   background: none;
-  border: 1px solid rgba(232, 228, 248, 0.14);
+  border: 1px solid rgba(232, 228, 248, 0.35);
   border-radius: 999px;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 300;
@@ -191,22 +186,100 @@ html, body, #root {
   letter-spacing: 0.3em;
   color: rgba(232, 228, 248, 0.9);
   cursor: pointer;
-  opacity: 0.22;
+  opacity: 0.55;
   transition: opacity 0.6s ease, border-color 0.6s ease;
 }
 .drift-toggle:hover,
 .drift-toggle:focus-visible {
-  opacity: 0.85;
+  opacity: 0.95;
   outline: none;
 }
 .drift-toggle.on {
   border-color: rgba(232, 228, 248, 0.35);
-  opacity: 0.4;
+  opacity: 0.7;
 }
 .drift-toggle.on:hover {
-  opacity: 0.85;
+  opacity: 0.95;
 }
 @media (hover: none) {
   /* on touch there is no hover to reveal it */
   .drift-toggle { opacity: 0.45; }
+}
+
+/* frame rate: above drift, just as quiet */
+.fps {
+  position: fixed;
+  right: max(16px, 2.2vw);
+  bottom: calc(max(16px, 2.2vw) + 48px);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  color: rgba(232, 228, 248, 0.9);
+  opacity: 0.55;
+  transition: opacity 0.6s ease;
+  cursor: pointer;
+}
+.fps:hover,
+.fps:focus-within {
+  opacity: 0.95;
+}
+.fps input {
+  width: 110px;
+  accent-color: rgba(232, 228, 248, 0.85);
+  cursor: pointer;
+}
+/* a fixed width, so the slider never shifts under your hand as the label changes */
+.fps span {
+  display: inline-block;
+  width: 11.5em;
+  text-align: right;
+  white-space: nowrap;
+}
+@media (hover: none) {
+  .fps { opacity: 0.7; }
+}
+
+/* the sliders: a light track and a bright handle, legible on a dark scene */
+.fps input,
+.drift-pace input {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  background: transparent;
+}
+.fps input::-webkit-slider-runnable-track,
+.drift-pace input::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(232, 228, 248, 0.5);
+}
+.fps input::-moz-range-track,
+.drift-pace input::-moz-range-track {
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(232, 228, 248, 0.5);
+}
+.fps input::-webkit-slider-thumb,
+.drift-pace input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  margin-top: -5.5px;
+  border-radius: 50%;
+  background: rgb(240, 236, 255);
+  box-shadow: 0 0 10px rgba(190, 175, 255, 0.7);
+}
+.fps input::-moz-range-thumb,
+.drift-pace input::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border: none;
+  border-radius: 50%;
+  background: rgb(240, 236, 255);
+  box-shadow: 0 0 10px rgba(190, 175, 255, 0.7);
 }

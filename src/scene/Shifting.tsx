@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { dissolvable, dissolveStyle, type DissolveUniform } from './dissolve'
+import { dissolvable, type DissolveUniform } from './dissolve'
 import { DEPTH_STEP } from './WindowRig'
 import { mulberry32, range } from './rng'
 import { makeBody, nudge } from './touch'
@@ -93,9 +93,9 @@ function PieceView({ p, onGone }: { p: Piece; onGone: (id: number) => void }) {
   const u = useMemo<DissolveUniform>(() => ({ value: p.initial ? 0 : 1 }), [p.initial])
   const mats = useMemo<Mats>(
     () => ({
-      stone: dissolvable(w.mats.stone, u, w.mats.crystalLight, dissolveStyle(w)),
-      dark: dissolvable(w.mats.dark, u, w.mats.crystalLight, dissolveStyle(w)),
-      crystal: dissolvable(p.accent ? w.mats.accent : w.mats.crystal, u, w.mats.crystalLight, dissolveStyle(w)),
+      stone: dissolvable(w.mats.stone, u, w.mats.crystalLight),
+      dark: dissolvable(w.mats.dark, u, w.mats.crystalLight),
+      crystal: dissolvable(p.accent ? w.mats.accent : w.mats.crystal, u, w.mats.crystalLight),
     }),
     [u, p.accent, w],
   )
@@ -201,7 +201,7 @@ function glowTexture() {
   return glowTex
 }
 
-function Wisp({ color, seed, glow = true }: { color: THREE.Color; seed: number; glow?: boolean }) {
+function Wisp({ color, seed }: { color: THREE.Color; seed: number }) {
   const w = useWorld()
   const ref = useRef<THREE.Group>(null!)
   const mat = useMemo(
@@ -231,20 +231,19 @@ function Wisp({ color, seed, glow = true }: { color: THREE.Color; seed: number; 
   return (
     <group ref={ref}>
       <pointLight color={color} intensity={16} distance={18} decay={1.5} />
-      {glow && <sprite material={mat} scale={1.6} />}
+      <sprite material={mat} scale={1.6} />
     </group>
   )
 }
 
-/** glow: false keeps their light on the world but not the bright sprite (pattern realms, where it folds into blobs) */
-export function Wisps({ glow = true }: { glow?: boolean }) {
+export function Wisps() {
   const w = useWorld()
   const r = useMemo(() => w.rng('wisps'), [w])
   const seeds = useMemo(() => [Math.floor(r() * 1e6), Math.floor(r() * 1e6)], [r])
   return (
     <>
-      <Wisp color={w.mats.crystalLight} seed={seeds[0]} glow={glow} />
-      <Wisp color={w.light.glow} seed={seeds[1]} glow={glow} />
+      <Wisp color={w.mats.crystalLight} seed={seeds[0]} />
+      <Wisp color={w.light.glow} seed={seeds[1]} />
     </>
   )
 }
