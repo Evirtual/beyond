@@ -1,11 +1,11 @@
 import { chromium } from 'playwright'
 
-// The social preview (public/og-image.jpg): a real frame of the site at the standard 1200×630,
+// The social preview (public/og-image-2.jpg; bump the number when it changes, so social platforms don't show a cached old one): a real frame of the site at the standard 1200×630,
 // with the words on the glass hidden and the name set quietly in the app's own type.
 //   node scripts/render-og-image.mjs [url] [out] [scrolls]
 //   (ICON_BROWSER_CHANNEL=msedge to use installed Edge)
 const url = process.argv[2] ?? 'https://beyond.edgarasneverdauskas.com/?v=1a2b3c4d&hour=22'
-const out = process.argv[3] ?? new URL('../public/og-image.jpg', import.meta.url).pathname.replace(/^\/(\w:)/, '$1')
+const out = process.argv[3] ?? new URL('../public/og-image-2.jpg', import.meta.url).pathname.replace(/^\/(\w:)/, '$1')
 // how far to fly in before the shot: the nearer, the bigger the black hole
 const scrolls = Number(process.argv[4] ?? 1)
 const browser = await chromium.launch({
