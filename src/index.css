@@ -181,7 +181,7 @@ canvas, .controls { touch-action: none; }
   color: rgba(232, 228, 248, 0.9);
   /* faded while you're not reaching for them; clear on hover, or while open */
   opacity: 0.4;
-  transition: opacity 0.6s ease;
+  transition: opacity 0.6s ease, color 1.5s ease;
 }
 .pill:hover,
 .pill:focus-within,
@@ -303,7 +303,7 @@ html[data-ether] .pill:not(:hover):not(:focus-within):not(.open) { opacity: 0.75
 
 /* while a corner control is open, the scroll hint steps out of its way */
 .scroll-hint {
-  transition: filter 0.4s ease;
+  transition: filter 0.4s ease, color 1.5s ease;
 }
 html[data-open-fps] .scroll-hint,
 html[data-open-drift] .scroll-hint {
@@ -328,4 +328,14 @@ html[data-open-drift] .scroll-hint {
   /* Keep an active control usable; defer to the user's interaction. */
   .controls:focus-within { animation: none; }
   #root:has(.controls:focus-within) .inscription { visibility: hidden; }
+}
+
+/* entering or leaving the ether, the words fade between light and grey instead of jumping */
+.whisper,
+.depth-marker,
+.depth-marker .dim,
+.inscription,
+.inscription .dim,
+.pill-label {
+  transition: color 1.5s ease;
 }
