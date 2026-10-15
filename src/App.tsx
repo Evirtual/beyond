@@ -74,7 +74,7 @@ function StepWatcher({ onStep }: { onStep: (step: number) => void }) {
  * The words on the glass fade as the black hole grows. The hole grows with your flight, so the
  * fade keeps pace with you: scroll fast and they're gone fast.
  */
-function StageTextFade() {
+function StageTextFade({ step }: { step: number }) {
   const last = useRef(-1)
   const introOpacity = useRef(1)
   useLayoutEffect(() => {
@@ -83,7 +83,9 @@ function StageTextFade() {
   }, [])
   useFrame(() => {
     // (a resting hole sits near 0.27, so the words stay whole until you actually move toward it)
-    const v = 1 - THREE.MathUtils.smoothstep(view.hole, 0.32, 0.62)
+    const v = view.step === step
+      ? 1 - THREE.MathUtils.smoothstep(view.hole, 0.32, 0.62)
+      : 0
     // Intro opacity only decreases: once swallowed by the first hole it can never
     // return, even while the next stage resets its hole and React is still rendering.
     const intro = view.step === START_STEP ? Math.min(introOpacity.current, v) : 0
@@ -252,7 +254,8 @@ function DepthMarker({ step }: { step: number }) {
     if (step === 0 && shown === null) return // the first arrival has its own words
     setShown(step)
   }, [step])
-  if (shown === null) return null
+  // Never paint the previous label while the arrival effect catches up.
+  if (shown === null || shown !== step) return null
   const sp = spectrumAt(shown)
   const ether = isEther(shown)
   const label = ether ? 'the ether' : sp ? `${sp.hue.name} · ${sp.shade.name}` : 'home'
@@ -590,7 +593,7 @@ export default function App() {
 
         <WindowRig />
         <StepWatcher onStep={handleStep} />
-        <StageTextFade />
+        <StageTextFade step={step} />
         <TapInput />
         <Glass />
       </Canvas>
