@@ -339,3 +339,6 @@ html[data-open-drift] .scroll-hint {
 .pill-label {
   transition: color 1.5s ease;
 }
+
+/* each stage's words fade as you near its black hole (--stage is set every frame, 1 → 0) */
+.stage-text { opacity: var(--stage, 1); }

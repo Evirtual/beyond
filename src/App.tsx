@@ -70,6 +70,34 @@ function StepWatcher({ onStep }: { onStep: (step: number) => void }) {
   return null
 }
 
+/**
+ * The words on the glass fade as the black hole grows. The hole grows with your flight, so the
+ * fade keeps pace with you: scroll fast and they're gone fast.
+ */
+function StageTextFade() {
+  const last = useRef(-1)
+  const introOpacity = useRef(1)
+  useLayoutEffect(() => {
+    document.documentElement.style.setProperty('--intro', '1')
+    return () => { document.documentElement.style.removeProperty('--intro') }
+  }, [])
+  useFrame(() => {
+    // (a resting hole sits near 0.27, so the words stay whole until you actually move toward it)
+    const v = 1 - THREE.MathUtils.smoothstep(view.hole, 0.32, 0.62)
+    // Intro opacity only decreases: once swallowed by the first hole it can never
+    // return, even while the next stage resets its hole and React is still rendering.
+    const intro = view.step === START_STEP ? Math.min(introOpacity.current, v) : 0
+    if (intro !== introOpacity.current) {
+      introOpacity.current = intro
+      document.documentElement.style.setProperty('--intro', String(intro))
+    }
+    if (Math.abs(v - last.current) < 0.004) return
+    last.current = v
+    document.documentElement.style.setProperty('--stage', v.toFixed(3))
+  })
+  return null
+}
+
 /** What presses against the glass at the start of every shade, in every world. */
 function GlassEdge() {
   const { length } = useWorld()
@@ -537,6 +565,11 @@ function FpsControl() {
 
 export default function App() {
   const [step, setStep] = useState(START_STEP)
+  const [introFinished, setIntroFinished] = useState(false)
+  const handleStep = (nextStep: number) => {
+    setStep(nextStep)
+    if (nextStep !== START_STEP) setIntroFinished(true)
+  }
   return (
     <>
       <Canvas
@@ -556,14 +589,23 @@ export default function App() {
         <Worlds step={step} />
 
         <WindowRig />
-        <StepWatcher onStep={setStep} />
+        <StepWatcher onStep={handleStep} />
+        <StageTextFade />
         <TapInput />
         <Glass />
       </Canvas>
-      <div className="whisper">Look through.</div>
-      <Inscription />
-      <DepthMarker step={step} />
-      <ScrollHint />
+      {/* each stage's words belong to it: they fade as you near its black hole, and the opening
+          words are gone once you've left the stage you arrived in */}
+      <div className="stage-text">
+        {!introFinished && step === START_STEP && (
+          <div style={{ opacity: 'var(--intro, 1)' }}>
+            <div className="whisper">Look through.</div>
+            <Inscription />
+            <ScrollHint />
+          </div>
+        )}
+        <DepthMarker step={step} />
+      </div>
       {/* the corner controls: their pills side by side on the bottom row, each slider opening above its own */}
       <div className="controls">
         <FpsControl />
