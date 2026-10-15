@@ -3,3 +3,7 @@ dist
 *.local
 .DS_Store
 *.tsbuildinfo
+
+# showcase video renders (scripts/render-video.mjs)
+*.mp4
+video-frames/
