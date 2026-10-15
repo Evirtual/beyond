@@ -1,6 +1,9 @@
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { initializeLaunchViewport } from './launchViewport'
 import './index.css'
+
+initializeLaunchViewport()
 
 // Start the entrance text only once its bundled font is ready, avoiding a visible swap.
 document.fonts.load('italic 300 14px "Cormorant Garamond"')
