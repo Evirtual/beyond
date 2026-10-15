@@ -286,6 +286,21 @@ canvas, .controls { touch-action: none; }
   box-shadow: 0 0 10px rgba(190, 175, 255, 0.7);
 }
 
+/* in the bright ether the words on the glass turn a soft grey, so they read against the milk */
+html[data-ether] .depth-marker,
+html[data-ether] .depth-marker .dim,
+html[data-ether] .inscription,
+html[data-ether] .inscription .dim,
+html[data-ether] .scroll-hint,
+html[data-ether] .whisper,
+html[data-ether] .pill,
+html[data-ether] .pill.on .pill-label {
+  color: rgba(58, 54, 66, 0.85);
+  text-shadow: none;
+}
+html[data-ether] .scroll-hint-line { background: linear-gradient(to bottom, rgba(58, 54, 66, 0), rgba(58, 54, 66, 0.4), rgba(58, 54, 66, 0)); }
+html[data-ether] .pill:not(:hover):not(:focus-within):not(.open) { opacity: 0.75; }
+
 /* while a corner control is open, the scroll hint steps out of its way */
 .scroll-hint {
   transition: filter 0.4s ease;

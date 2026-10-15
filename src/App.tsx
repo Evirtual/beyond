@@ -7,6 +7,7 @@ import { Sky, HazeLayers, LightShafts } from './scene/Atmosphere'
 import { Distant } from './scene/Distant'
 import { Foreground, Debris } from './scene/Near'
 import { ShiftingMidground, Wisps } from './scene/Shifting'
+import { EtherContents } from './scene/Ether'
 import { Motes } from './scene/Particles'
 import { pace, view } from './scene/state'
 import { WorldView, useWorld } from './scene/world'
@@ -29,6 +30,7 @@ import {
   dayPeriod,
   DEPTH_CYCLE,
   hourPreviewed,
+  isEther,
   light,
   localHour,
   moonName,
@@ -87,8 +89,10 @@ function GlassEdge() {
   )
 }
 
-/** Everything inside one zone. For now every zone is home: the black hole leads home again. */
+/** Everything inside one zone: home, or (every other world) the ether between homes. */
 function WorldContents() {
+  const w = useWorld()
+  if (isEther(w.start)) return <EtherContents />
   return (
     <>
       <HomeContents />
@@ -212,15 +216,22 @@ function ScrollHint() {
 /** A brief mark on arrival in each world, so the cycle back home can be felt. */
 function DepthMarker({ step }: { step: number }) {
   const [shown, setShown] = useState<number | null>(null)
+  // the ether is bright: the words on the glass get a dark halo there, so they stay readable
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-ether', isEther(step))
+  }, [step])
   useEffect(() => {
     if (step === 0 && shown === null) return // the first arrival has its own words
     setShown(step)
   }, [step])
   if (shown === null) return null
   const sp = spectrumAt(shown)
-  const label = sp ? `${sp.hue.name} · ${sp.shade.name}` : 'home'
-  const hint = !sp
-    ? 'the world you arrived in'
+  const ether = isEther(shown)
+  const label = ether ? 'the ether' : sp ? `${sp.hue.name} · ${sp.shade.name}` : 'home'
+  const hint = ether
+    ? 'between worlds · home lies through the next veil'
+    : !sp
+    ? 'a new home, never the same twice'
     : sp.index === DEPTH_CYCLE - 1
       ? 'home lies one veil further'
       : sp.shade.name === 'dark'

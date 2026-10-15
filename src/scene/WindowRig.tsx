@@ -268,6 +268,10 @@ export function WindowRig() {
       }
     }
     view.hole = damp(view.hole, holeTarget, 6, dt)
+    // the new hole surfaces slowly out of the distance (over ~2.5 s), so on a bright world its
+    // black shadow doesn't pop in; racing at it sooner, it is solid by the time it's large
+    const appearT = THREE.MathUtils.smoothstep(t - arrival.current.at, 0.3, 2.8)
+    view.holeAppear = Math.max(appearT, THREE.MathUtils.smoothstep(view.hole, 0.12, 0.3))
     view.holeBehind = damp(view.holeBehind, forward ? 0 : 1, 4, dt)
 
     // the black veil only exists at the zone's ends (entering or leaving through a hole);

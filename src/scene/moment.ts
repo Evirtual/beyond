@@ -46,6 +46,14 @@ export const viewId = homeSeed.toString(16).padStart(8, '0')
 export const DEPTH_CYCLE = 1
 
 /**
+ * Every other world is the ether: home, a black hole, the ether, a black hole, home again (a new
+ * one), and on. `?at=1` starts in the ether.
+ */
+export function isEther(step: number) {
+  return ((step % 2) + 2) % 2 === 1
+}
+
+/**
  * Seed of the world at a given depth step. The home you arrived in keeps the visit's own seed;
  * every home beyond a black hole is dealt its own, as different as a fresh visit would be.
  * Deterministic, so going back through a black hole returns you to the very home you left.
@@ -298,6 +306,7 @@ export function isHueChange(a: number, b: number) {
 
 /** Colour of the matter swirling around the hole: the realm waiting on the other side. */
 export function ringColorFor(step: number, out: THREE.Color) {
+  if (isEther(step)) return out.set('#a8ecff') // the ether: its own pale living light
   const sp = spectrumAt(step)
   if (!sp) return out.set('#c9bcff') // home: the moonlit violet you arrived in
   return out.setHSL(sp.hue.h3, 0.95, 0.6)
@@ -315,7 +324,18 @@ const homeHazeB = new THREE.Color('#4f6fb8')
 const hc = new THREE.Color()
 
 /** Light for one step: the hour's light, or the hour's light dreamed in that step's colour. */
+const etherTint = {
+  horizon: new THREE.Color('#0b1424'), top: new THREE.Color('#03050c'), glow: new THREE.Color('#bfeaff'),
+  key: new THREE.Color('#bfe6ff'), fill: new THREE.Color('#8a7fd8'), hazeA: new THREE.Color('#5f8fd0'), hazeB: new THREE.Color('#7a5fc8'),
+}
 function tintFor(step: number, out: Tint) {
+  if (isEther(step)) {
+    const e = etherTint
+    out.horizon.copy(e.horizon); out.top.copy(e.top); out.glow.copy(e.glow)
+    out.key.copy(e.key); out.fill.copy(e.fill); out.hazeA.copy(e.hazeA); out.hazeB.copy(e.hazeB)
+    out.exposure = 1.4
+    return
+  }
   const sp = spectrumAt(step)
   if (!sp) {
     out.horizon.copy(day.horizon); out.top.copy(day.top); out.glow.copy(day.glow)

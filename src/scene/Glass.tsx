@@ -34,6 +34,7 @@ export function Glass() {
         tScene: { value: null },
         tPortal: { value: null },
         uPortal: { value: 0 },
+        uAppear: { value: 1 },
         uTime: { value: 0 },
         uOpen: { value: 0 },
         uAspect: { value: 1 },
@@ -62,7 +63,7 @@ export function Glass() {
         void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
       fragmentShader: /* glsl */ `
         uniform sampler2D tScene, tPortal;
-        uniform float uPortal;
+        uniform float uPortal, uAppear;
         uniform float uTime, uOpen, uAspect, uVeil, uHole, uEdge, uEmerge, uSpeed, uFlash;
         uniform vec3 uFlashColor, uTunA, uTunB;
         uniform float uTunnel, uTunnelP, uTunnelPhase, uSpiral, uSpiralDir;
@@ -148,7 +149,7 @@ export function Glass() {
             vec2 rd = vec2(cs * hc.x - sn * hc.y, sn * hc.x + cs * hc.y);
             // lensing: light from behind is bent around the rim
             float lens = 1.5 + 0.18 * sin(uTime * 1.1) + 0.1 * sin(uTime * 2.7 + hr * 20.0);
-            rd *= mix(1.0 + lens * rs * rs / max(hr * hr, 1e-4), 1.0 + 0.5 * uHole, uEdge);
+            rd *= mix(1.0 + lens * uAppear * rs * rs / max(hr * hr, 1e-4), 1.0 + 0.5 * uHole, uEdge);
             uv = uHoleC + rd / vec2(uAspect, 1.0) + pre;
           }
           // falling in: the last of the world rushes toward the hole
@@ -249,7 +250,7 @@ export function Glass() {
             // larger lit structure. A thin disk of hot matter orbits it, seen nearly
             // edge-on; its near side crosses in front of the shadow, while gravity bends
             // the light of its far side up over the top (and a sliver under the bottom).
-            float show = smoothstep(0.0, 0.12, uHole) * (1.0 - uEdge);
+            float show = smoothstep(0.0, 0.12, uHole) * (1.0 - uEdge) * uAppear;
             float th = atan(hc.y, hc.x);
             float roll = -0.18 + 0.06 * sin(uTime * 0.13);
             vec2 qd = vec2(cos(roll) * hc.x - sin(roll) * hc.y, sin(roll) * hc.x + cos(roll) * hc.y);
@@ -289,22 +290,28 @@ export function Glass() {
             // undistorted by the time it fills the frame, so crossing changes nothing
             float insideH = 1.0 - smoothstep(rs * 0.98, rs * 1.02, hr);
             vec3 beyond = vec3(0.0);
-            if (uPortal > 0.5) {
+            if (uPortal > 0.001) {
               // the lens curve is gone well before the crossing, not still fading at it
               float fk = 1.0 - smoothstep(0.55, 0.9, uHole);
               float sc = mix(1.0, 0.6 + 0.4 * clamp(hr / max(rs, 1e-4), 0.0, 1.0), fk);
-              vec2 puv = uHoleC + (uvGlass - uHoleC) * sc;
-              beyond = rgbSplit(tPortal, puv, dirGlass);
+              vec2 puv = uHoleC + (uvGlass - uHoleC) * sc;              // the world beyond surfaces gradually out of the shadow, never switched on in one frame
+              beyond = rgbSplit(tPortal, puv, dirGlass) * uPortal;
             }
-            col = mix(col, beyond, insideH * (1.0 - uEdge));
+            col = mix(col, beyond, insideH * (1.0 - uEdge) * uAppear);
             // everything lit sits outside the horizon — inside, nothing
             float outside = smoothstep(rs * 0.98, rs * 1.02, hr);
-            col += (lensedArc + uRing * photon * 1.3 + mix(uRing, vec3(1.0), 0.4) * 0.06 * exp(-(hr - rs) / (rs * 3.0 + 0.002))) * show * outside;
+            // the border spins: brighter and dimmer bands of its light turning slowly around the rim
+            float spinBands = 0.7 + 0.3 * sin(5.0 * th - uTime * 2.2 + hr / max(rs, 1e-4) * 6.0);
+            col += (lensedArc * spinBands + uRing * photon * 1.3 * spinBands + mix(uRing, vec3(1.0), 0.4) * 0.06 * exp(-(hr - rs) / (rs * 3.0 + 0.002))) * show * outside;
             float nearSide = smoothstep(0.02, -0.02, qd.y);   // the half of the disk between you and the hole
+            // over the black circle only its true front may cross: there the seam is tight (sized to
+            // the hole), so the soft edge above never paints a band across the shadow. Outside the
+            // circle the ring is unchanged
+            nearSide = mix(smoothstep(rs * 0.03, -rs * 0.03, qd.y), nearSide, outside);
             // the near side of the disk shades what is behind it — and fades out with the disk,
             // instead of leaving a dark band over the world beyond until the crossing
             col = mix(col, col * 0.15 + disk, nearSide * diskBand * show * 0.9 * diskFade);
-            col += disk * (1.0 - nearSide) * 0.35 * show;      // far half, seen past the shadow's sides
+            col += disk * (1.0 - nearSide) * 0.35 * show * outside; // far half: only past the shadow's sides, never across it
           }
           if (uHole > 0.001 && uEdge > 0.001) {
             // backwards: the dark closes in from every edge, the world shrinking to a lit circle
@@ -313,7 +320,7 @@ export function Glass() {
             float swirl = 0.5 + 0.5 * sin(ang * 5.0 + uTime * 1.6 - hr * 12.0);
             float rimD = (hr - ri * 0.93) / (0.025 + ri * 0.05);
             float rim = exp(-rimD * rimD);
-            vec3 behindEdge = uPortal > 0.5 ? rgbSplit(tPortal, uvGlass, dirGlass) : vec3(0.0);
+            vec3 behindEdge = uPortal > 0.001 ? rgbSplit(tPortal, uvGlass, dirGlass) * uPortal : vec3(0.0);
             vec3 edged = mix(behindEdge, col, smoothstep(ri, ri * 0.9, hr)) + uRing * rim * (0.35 + 0.65 * swirl) * 1.1 * smoothstep(0.0, 0.12, uHole);
             col = mix(col, edged, uEdge);
           }
@@ -373,6 +380,7 @@ export function Glass() {
     // a crossing is made in darkness: the veil becomes the inside of the hole
     if (view.holeBoundary) mat.uniforms.uVeilColor.value.copy(black)
     mat.uniforms.uHole.value = view.hole
+    mat.uniforms.uAppear.value = view.holeAppear
     ringColorFor(view.across, mat.uniforms.uRing.value)
     // the hole hangs far beyond everything; leaning shifts it a little, like any distant thing
     holePoint.set(0, 0.8, camera.position.z - 140).project(camera)
@@ -404,7 +412,14 @@ export function Glass() {
     rs += (Math.max(rs, corner * 1.08) - rs) * THREE.MathUtils.smoothstep(h, 0.82, 0.96)
     const edgeMode = view.holeBehind > 0.01
     const beyond = TRANSITION === 'portal' ? worlds.get(zoneOf(view.across).start) : undefined
-    const showBeyond = !!beyond && view.hole > 0.12
+    // how much of the screen the shadow spans (1 = out to the farthest corner). Measured against
+    // the screen itself, so phone, tablet and desktop all reveal at the same point of the approach
+    const coverage = rs / corner
+    // the shadow stays black at first; the world beyond fades up as it spreads across the screen,
+    // fully there well before it covers the frame
+    const reveal = THREE.MathUtils.smoothstep(coverage, 0.08, 0.45)
+    // drawn only once it starts to show
+    const showBeyond = !!beyond && reveal > 0
     // once the hole's shadow covers the whole frame, the world you're leaving can't be seen:
     // only the world beyond is drawn, so the last of the fall costs one world, not two
     const covered = showBeyond && !edgeMode && rs * 0.98 > corner + 0.02
@@ -434,7 +449,7 @@ export function Glass() {
       gl.render(beyond.scene, beyond.camera)
     }
     mat.uniforms.tPortal.value = portalFbo.texture
-    mat.uniforms.uPortal.value = showBeyond ? 1 : 0
+    mat.uniforms.uPortal.value = showBeyond ? reveal : 0
     gl.setRenderTarget(null)
     gl.render(quadScene, quadCam)
 

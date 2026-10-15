@@ -13,7 +13,9 @@ change while you watch, in the light of your own time of day and tonight's real 
 
 Scroll, or let it drift, and a black hole pulls you on: it grows from a dot in the distance
 until it swallows the view, and you come out the other side into the world waiting inside it.
-For now that world is home again; what lies beyond the black hole is being reimagined.
+Beyond the first lies the ether: no ground and no things, only a substance you fly through,
+mist that moves like a slow liquid, folding over itself and drawn through with light. Its own
+black hole leads home again, to a new home, never the same twice.
 
 ## Controls
 
@@ -26,7 +28,8 @@ For now that world is home again; what lies beyond the black hole is being reima
 ## Addresses
 
 - `?v=1a2b3c4d`: a particular journey (any 8 hex characters). Without it, every visit is new.
-- `?at=3`: start a few black holes further in (any step number).
+- `?at=3`: start a few black holes further in (any step number; odd numbers are the ether).
+- `?ether=smoke`: the darker ether, smoke threaded with thin veins of light, instead of milk.
 
 ## Running it
 

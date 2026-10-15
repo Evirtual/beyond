@@ -70,6 +70,8 @@ export const view = {
   camZ: 0,
   /** 0 → travelling forward: the hole grows from the centre; 1 → travelling back: darkness closes in from the edges */
   holeBehind: 0,
+  /** 0 → 1: the next hole (its shadow too) fading in after an arrival, instead of popping up */
+  holeAppear: 1,
   /** 1 → just thrown out of a black hole, easing to 0 as the new zone opens around you */
   emerge: 0,
   /** white-hole flash on arrival, 1 → 0 */
